@@ -6,28 +6,32 @@ from torch.utils.data import TensorDataset, DataLoader
 import torch.nn.functional as F
 import time
 import math
-from scipy.stats import pearsonr
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import os
 from torch.multiprocessing import Pool, Process, set_start_method
-import matplotlib.pyplot as plt
 
-def data_load(PATH):
-    train =np.loadtxt(f'{PATH}/vina_train.csv', delimiter=",", dtype=np.float32)
-    x_train = torch.tensor(train[:, 1:])
-    y_train = torch.tensor(train[:, :1])
-    length = x_train.size(1)
-    print(length)
+
+def load_data(batch_size=8192):
+    X = pd.read_csv('smiles_plus_features.csv', index_col=0)
+    y = X['Docking_Score'].to_numpy(dtype=np.float32).reshape(-1,1)
+    X = X.drop(columns=['Docking_Score']).to_numpy(dtype=np.float32)
+
+    test_ind = np.random.choice(range(X.shape[0]), int(X.shape[0]*0.1), replace=False)
+    test_mask = np.zeros(X.shape[0], dtype=bool)
+    test_mask[test_ind] = True
+
+    x_train = torch.tensor(X[~test_mask])
+    y_train = torch.tensor(y[~test_mask])
     df = TensorDataset(x_train,y_train)
-    dataloader = DataLoader(df, batch_size=2048*4, shuffle=True)
-    print("data loading")
-    test = np.loadtxt(f'{PATH}/vina_test.csv', delimiter=",", dtype=np.float32)
-    x_test = torch.tensor(test[:, 1:])
-    y_test = torch.tensor(test[:, :1])
+    dataloader = DataLoader(df, batch_size=batch_size, shuffle=True)
+
+    x_test = torch.tensor(X[test_mask])
+    y_test = torch.tensor(y[test_mask])
     df_t = TensorDataset(x_test,y_test)
-    dataloader_t = DataLoader(df_t, batch_size=2048*4, shuffle=True)
+    dataloader_t = DataLoader(df_t, batch_size=batch_size, shuffle=True)
+
+    length = x_train.size(1)
+
     return dataloader, dataloader_t,length
 
 
@@ -51,12 +55,12 @@ class Net(nn.Module):
         return x
 
 
-def train(train_data, test_data, model, device,epochs=200):
-    learning_rate = 0.001
+def train(train_data, test_data, model, device, epochs=2, lr=0.001):
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    train_losses=[]
-    test_losses=[]
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    train_losses = []
+    test_losses = []
+
     for epoch in range(epochs):
         running_loss = 0.0
         running_loss_ = 0.0
@@ -91,9 +95,7 @@ def train(train_data, test_data, model, device,epochs=200):
                     epoch_step += 1
             test_losses.append(test_loss)
             print(f'test loss at {epoch} is {running_loss_/epoch_step}')
-            #correlation coeff
-            #new_shape = (len(y_test), 1)
-            #y_test = y_test.view(new_shape)
+
             vx = y_test - torch.mean(y_test) #true - true mean
             vy = test_output - torch.mean(test_output) #pred - pred mean
             corr = torch.sum(vx * vy) / (torch.sqrt(torch.sum(vx ** 2)) * torch.sqrt(torch.sum(vy ** 2)))  # use Pearson correlation
@@ -106,8 +108,7 @@ def test(test_data, model):
     epoch_step = 0
     true = []
     pred = []
-    test_loss=[]
-    #model.eval()
+
     for i, (xx,yy) in enumerate(test_data):
         with torch.no_grad():
             xx = xx.to(device=device)
@@ -116,25 +117,28 @@ def test(test_data, model):
             loss = criterion(test_output, yy)
             running_loss += loss.item()
             epoch_step += 1
+
             for i,x in enumerate(test_output):
                 x = x.item()
                 pred.append(x)
+
             for a,b in enumerate(yy):
                 b = b.item()
                 true.append(b)
-            
+
     print('last loss at {}'.format(running_loss/epoch_step))
+
+
 if __name__ == '__main__':
     try:
          set_start_method('spawn')
     except RuntimeError:
         pass
-    device = torch.device("cuda")
-    dict_PATH = "/home/choi/docking/pytorch/surechem_vina"
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     num_process = 10
     pool = Pool(num_process)
     print("data loading start")
-    train_data, test_data, length = data_load(dict_PATH)
+    train_data, test_data, length = load_data()
     print(f"length = {length}") #input size
     model = Net(length, 1, dropout=0.3).to(device=device)
     print(model)
@@ -148,4 +152,4 @@ if __name__ == '__main__':
     for p in processes:
         p.join()
     test(test_data, model)
-    torch.save(model.state_dict(), '/home/choi/docking/pytorch/surechem_vina_gpu/l3_pytorch_model_multi_520.pt')
+    torch.save(model.state_dict(), 'l3_pytorch_model_multi_520.pt')
