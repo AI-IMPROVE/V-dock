@@ -1,21 +1,72 @@
+import os
+import candle
 import torch
 from torch import nn
 from utils import *
 
+file_path = os.path.dirname(os.path.realpath(__file__))
+data_dir = os.environ['CANDLE_DATA_DIR'].rstrip('/')
+n_gpu = 'cuda:' + os.environ['CUDA_VISIBLE_DEVICES']
 
-def main():
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+additional_definitions = []
+
+required = [
+    'epochs',
+    'batch_size',
+    'learning_rate',
+    'output_dir'
+]
+
+
+class V-dock(candle.Benchmark):
+    def set_locals(self):
+        if required is not None:
+            self.required = set(required)
+        if additional_definitions is not None:
+            self.additional_definitions = additional_definitions
+
+
+def initialize_parameters():
+    vdock_common = V-dock(file_path,
+        'vdock_default_model.txt',
+        'pytorch',
+        prog='vdock_candle',
+        desc='CANDLE compliant V-dock'
+    )
+
+    gParameters = candle.finalize_parameters(vdock_common)
+
+    return gParameters
+
+
+def run(gParameters):
+    batch_size = gParameters['batch_size']
+    epochs = gParameters['epochs']
+    learning_rate = gParameters['learning_rate']
+    optimizer = gParameters['optimizer']
+    loss = gParameters['loss']
+    output_dir = gParameters['output_dir']
+
+    device = torch.device(n_gpu if torch.cuda.is_available() else 'cpu')
     data_file = 'smiles_plus_features.csv'
 
     print("Loading data...")
-    test_data, length = load_data(data_file, 'test_ind.npy', 'Docking_Score', 8192)
+    test_data, length = load_data(data_file, 'test_ind.npy',
+                                  'Docking_Score', batch_size)
     model = Net(length, 1, dropout=0.3).to(device=device)
 
     criterion = nn.MSELoss()
-    model.load_state_dict(torch.load('l3_pytorch_model_multi_520.pt'))
+    model.load_state_dict(torch.load(output_dir + '/model.hdf5'))
     model.eval()
 
     true, pred, test_loss = eval_epoch(test_data, model, criterion, device)
+
+    return history
+
+
+def main():
+    gParameters = initialize_parameters()
+    history = run(gParameters)
 
 
 if __name__ == '__main__':

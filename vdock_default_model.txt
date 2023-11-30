@@ -1,0 +1,6 @@
+[Global_Params]
+batch_size=8192
+epochs=200
+learning_rate=0.001
+dropout=0.3
+model_name='V-dock'
