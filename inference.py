@@ -43,8 +43,7 @@ def run(gParameters):
     batch_size = gParameters['batch_size']
     epochs = gParameters['epochs']
     learning_rate = gParameters['learning_rate']
-    optimizer = gParameters['optimizer']
-    loss = gParameters['loss']
+#    loss = gParameters['loss']
     output_dir = gParameters['output_dir']
 
     device = torch.device(n_gpu if torch.cuda.is_available() else 'cpu')
