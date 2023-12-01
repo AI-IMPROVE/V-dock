@@ -54,9 +54,9 @@ def run(gParameters):
     data_file = data_dir + '/smiles_plus_features.csv'
 
     print("Loading data...")
-    train_data, length = load_data(data_file, 'train_ind.npy',
+    train_data, length = load_data(data_file, data_dir + '/train_ind.npy',
                                    'Docking_Score', batch_size)
-    val_data, length = load_data(data_file, 'val_ind.npy',
+    val_data, length = load_data(data_file, data_dir + '/val_ind.npy',
                                  'Docking_Score', batch_size)
     model = Net(length, 1, dropout=dropout).to(device=device)
     print(model)

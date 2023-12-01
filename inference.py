@@ -50,7 +50,7 @@ def run(gParameters):
     data_file = data_dir + '/smiles_plus_features.csv'
 
     print("Loading data...")
-    test_data, length = load_data(data_file, 'test_ind.npy',
+    test_data, length = load_data(data_file, data_dir + '/test_ind.npy',
                                   'Docking_Score', batch_size)
     model = Net(length, 1, dropout=0.3).to(device=device)
 
