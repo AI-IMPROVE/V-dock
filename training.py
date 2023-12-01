@@ -45,7 +45,7 @@ def run(gParameters):
     batch_size = gParameters['batch_size']
     epochs = gParameters['epochs']
     learning_rate = gParameters['learning_rate']
-    optimizer = gParameters['optimizer']
+#    optimizer = gParameters['optimizer']
     loss = gParameters['loss']
     dropout = gParameters['dropout']
     output_dir = gParameters['output_dir']
