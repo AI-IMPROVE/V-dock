@@ -11,7 +11,7 @@
 
 ### Path to your CANDLEized model's main Python script###
 CANDLE_MODEL=/usr/local/V-dock/training.py
-DATA_PREPROCESSOR=/usr/local/V-dock/preprocessing.py
+DATA_PREPROCESSOR=/usr/local/V-dock/preprocess.py
 
 if [ $# -lt 2 ] ; then
         echo "Illegal number of parameters"

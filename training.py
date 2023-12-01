@@ -20,7 +20,7 @@ required = [
 ]
 
 
-class V-dock(candle.Benchmark):
+class Vdock(candle.Benchmark):
     def set_locals(self):
         if required is not None:
             self.required = set(required)
@@ -29,7 +29,7 @@ class V-dock(candle.Benchmark):
 
 
 def initialize_parameters():
-    vdock_common = V-dock(file_path,
+    vdock_common = Vdock(file_path,
         'vdock_default_model.txt',
         'pytorch',
         prog='vdock_candle',
