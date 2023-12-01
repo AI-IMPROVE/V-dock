@@ -2,10 +2,13 @@ import pandas as pd
 from rdkit import Chem
 from rdkit.Chem import MACCSkeys
 from rdkit.Chem import Descriptors
+import os
+
+data_dir = os.environ['CANDLE_DATA_DIR'].rstrip('/')
 
 
 def main():
-    data_file = 'sort_vina_smi_dock_score.txt'
+    data_file = data_dir + '/sort_vina_smi_dock_score.txt'
     smiles_df = pd.read_csv(data_file, header=None,
                             names=['SMILES', 'Docking_Score'])
     smiles_df = smiles_df.set_index('SMILES')
@@ -35,7 +38,7 @@ def main():
         smiles_df[col_names[i]] = [x[i] for x in feature_array]
 
     print(smiles_df)
-    smiles_df.to_csv('smiles_plus_features.csv')
+    smiles_df.to_csv(data_dir + '/smiles_plus_features.csv')
 
 
 def get_features(smiles):

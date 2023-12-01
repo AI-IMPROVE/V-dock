@@ -51,7 +51,7 @@ def run(gParameters):
     output_dir = gParameters['output_dir']
 
     device = torch.device(n_gpu if torch.cuda.is_available() else 'cpu')
-    data_file = 'smiles_plus_features.csv'
+    data_file = data_dir + '/smiles_plus_features.csv'
 
     print("Loading data...")
     train_data, length = load_data(data_file, 'train_ind.npy',
