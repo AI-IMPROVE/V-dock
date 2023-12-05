@@ -81,8 +81,6 @@ def run(gParameters):
 
     torch.save(model.state_dict(), output_dir + '/model.hdf5')
 
-    return history
-
 
 def main():
     gParameters = initialize_parameters()
