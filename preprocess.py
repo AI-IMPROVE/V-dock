@@ -11,19 +11,19 @@ def main():
     data_file = data_dir + '/sort_vina_smi_dock_score.txt'
     smiles_df = pd.read_csv(data_file, header=None,
                             names=['SMILES', 'Docking_Score'])
-    smiles_df = smiles_df.set_index('SMILES')
+#    smiles_df = smiles_df.set_index('SMILES')
     feature_array = []
 
-    for smiles_string in smiles_df.index:
+    for smiles_string in smiles_df['SMILES']:
         try:
             feat = get_features(smiles_string)
-            feature_array.append(feat)
+            feature_array.append([smiles_string] + feat)
 
         except:
             print(smiles_string)
-            smiles_df = smiles_df.drop(index=smiles_string)
+#            smiles_df = smiles_df.drop(index=smiles_string)
 
-    col_names = ['RDKitFP' + str(x) for x in range(2048)]
+    col_names = ['SMILES'] + ['RDKitFP' + str(x) for x in range(2048)]
     col_names += ['MACCSkey' + str(x) for x in range(167)]
     col_names += ['NumHBondDonors', 'NumHBondAcceptors',
                   'NumRotatableBonds', 'NumRings', 'NumHeteroAtoms',
@@ -34,8 +34,13 @@ def main():
                   'FracCAtomsSP3Hybridized', 'LabuteAccessibleSurfaceArea',
                   'NumRadicalElectrons', 'TopologicalPolarSurfaceArea']
 
-    for i in range(len(feature_array[0])):
-        smiles_df[col_names[i]] = [x[i] for x in feature_array]
+#    for i in range(len(feature_array[0])):
+#        smiles_df[col_names[i]] = [x[i] for x in feature_array]
+
+    df = pd.DataFrame(feature_array)
+    df.columns = col_names
+    smiles_df = smiles_df.merge(df, how='inner', on='SMILES')
+    smiles_df = smiles_df.set_index('SMILES')
 
     print(smiles_df)
     smiles_df.to_csv(data_dir + '/smiles_plus_features.csv')
